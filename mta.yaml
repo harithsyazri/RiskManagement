@@ -15,6 +15,8 @@ modules:
     path: gen/srv
     parameters:
       buildpack: nodejs_buildpack
+      disk-quota: 256M
+      memory: 256M
     build-parameters:
       builder: npm-ci
     provides:
@@ -49,6 +51,7 @@ modules:
           forwardAuthToken: true
       - name: risk-management-auth
 
+
 resources:
   - name: risk-management-db
     type: com.sap.xs.hdi-container
@@ -62,11 +65,20 @@ resources:
       service-plan: application
       path: ./xs-security.json
       config:
-        # [...]
+        xsappname: risk-management-${org}-${space}
+        tenant-mode: dedicated
         oauth2-configuration:
           # <-- add this
           redirect-uris:
-            # example: - https://risk-management-approuter.cfapps.eu10-004.hana.ondemand.com/login/callback
-            - https:///login/callback
-        xsappname: risk-management-${org}-${space}
-        tenant-mode: dedicated
+          # example: - https://risk-management-approuter.cfapps.eu10-004.hana.ondemand.com/login/callback
+          - https://*.cfapps.us10-001.hana.ondemand.com/login/callback
+
+        role-collections:
+        - name: 'RiskManager-${space}'
+          description: Manage Risks
+          role-template-references:
+          - $XSAPPNAME.RiskManager
+        - name: 'RiskViewer-${space}'
+          description: View Risks
+          role-template-references:
+          - $XSAPPNAME.RiskViewer
